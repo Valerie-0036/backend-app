@@ -1,0 +1,17 @@
+Flask==2.2.3
+gunicorn==20.1.0
+h5py==3.8.0
+ipython
+librosa
+matplotlib
+numpy
+pandas
+waitress
+scikit-learn
+pyngrok
+scipy
+tensorflow
+tensorflow-cpu
+requests
+python-firebase
+firebase_admin
