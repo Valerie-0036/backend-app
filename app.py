@@ -1,10 +1,9 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 from waitress import serve
-from pyngrok import ngrok
 from sklearn.neighbors import KNeighborsClassifier
 import os
 from sklearn.model_selection import train_test_split
@@ -23,9 +22,9 @@ cred = credentials.Certificate(r"bansos-2016-firebase-adminsdk-max5r-660f490c5d.
 firebase_admin.initialize_app(cred)
 db=firestore.client()
 app = Flask(__name__)
-# CORS(app)
+CORS(app)
 
-# app.config['DEBUG'] = os.environ.get('FLASK_DEBUG')
+app.config['DEBUG'] = os.environ.get('FLASK_DEBUG')
 
 @app.route("/api", methods=['POST','GET'])
 def home():
