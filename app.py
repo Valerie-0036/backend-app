@@ -18,7 +18,7 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 from flask_cors import CORS
 
-cred = credentials.Certificate(r"bansos-2016-firebase-adminsdk-max5r-660f490c5d.json")
+cred = credentials.Certificate(r"bansos-2016-firebase-adminsdk-max5r-f294586e65.json")
 firebase_admin.initialize_app(cred)
 db=firestore.client()
 app = Flask(__name__)
@@ -26,64 +26,6 @@ CORS(app)
 
 app.config['DEBUG'] = os.environ.get('FLASK_DEBUG')
 
-@app.route("/api", methods=['POST','GET'])
-def home():
-  print(request.args['query'])
-  input = str(request.args['query'])
-  print(input)
-  
-  answer = get_document("predictions",input)
-  X_data=np.array([answer["penghasilan"],answer["asset_motor"],answer["asset_mobil"],answer["asset_rumah"],answer["harga_rumah"],answer["harga_sewa"],answer["jumlah_anak"],answer["tanggungan_lain"]])
-  
-  datasets = pd.read_csv('data_warga_baruuuuu.csv', sep = ';')
-  datasets.keys()
-  X = np.asarray(datasets)
-  print(X)
-  kmeans = KMeans(n_clusters = 2,random_state=0)
-  kmeans.fit(X)
-  print(kmeans.cluster_centers_)
-  #clustered
-  print(kmeans.labels_)
-  new_y =[]
-  for i in range(len(kmeans.labels_)):
-    if(kmeans.labels_[i] == 0):
-      new_y.append("Layak")
-    else:
-      new_y.append("Tidak Layak")
-  # Import necessary modules
-
-
-
-  # Create feature and target arrays
-  y = kmeans.labels_
-
-  # Split into training and test set
-  X_train, X_test, y_train, y_test = train_test_split(
-        X, new_y, test_size = 0.2, random_state=0)
-
-  # neighbors = np.arange(1, 9)
-  # train_accuracy = np.empty(len(neighbors))
-  # test_accuracy = np.empty(len(neighbors))
-
-  # Loop over K values
-  # for i, k in enumerate(neighbors):
-  #   knn = KNeighborsClassifier(n_neighbors=k)
-  #   knn.fit(X_train, y_train)
-  #   predictions=knn.predict(X_test)
-  #   print(classification_report(y_test, predictions,digits=4))
-  #   print(confusion_matrix(y_test,predictions))
-
-
-  #kalo udah ada data
-
-  knn = KNeighborsClassifier(n_neighbors=3)
-  knn.fit(X_train, y_train)
-  predictions=knn.predict(X_data.reshape(1,8))
-  print(predictions)
-  update_existing_document(input,predictions[0])
-  return predictions[0]
-
-# home()
 
 def update_existing_document(docID,change):
 
@@ -259,57 +201,72 @@ def get_different_status(collection_name, status_value1, status_value2):
         print(f"Error retrieving documents: {str(e)}")
         
 
-# model = tf.keras.models.load_model('s_model')
-# d = {0: 'air_conditioner', 1: 'car_horn', 2: 'children_playing', 3: 'dog_bark', 4: 'drilling', 5: 'engine_idling', 6:'gun_shot', 7: 'jackhammer', 8: 'siren', 9: 'street_music'}
 
-# def func(filename):
-#     audio, sample_rate = librosa.load(filename)
-#     mfccs_features = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
-#     mfccs_scaled_features = np.mean(mfccs_features.T,axis=0)
-#     mfccs_scaled_features=mfccs_scaled_features.reshape(1,-1)
-#     predicted_label=np.argmax(model.predict(mfccs_scaled_features),axis=1)
-#     return d[predicted_label[0]]
+@app.route("/api", methods=['POST','GET'])
+def home():
+  print(request.args['query'])
+  input = str(request.args['query'])
+  print(input)
+  
+  answer = get_document("predictions",input)
+  X_data=np.array([answer["penghasilan"],answer["asset_motor"],answer["asset_mobil"],answer["asset_rumah"],answer["harga_rumah"],answer["harga_sewa"],answer["jumlah_anak"],answer["tanggungan_lain"]])
+  
+  datasets = pd.read_csv('data_warga_baruuuuu.csv', sep = ';')
+  datasets.keys()
+  X = np.asarray(datasets)
+  print(X)
+  kmeans = KMeans(n_clusters = 2,random_state=0)
+  kmeans.fit(X)
+  print(kmeans.cluster_centers_)
+  #clustered
+  print(kmeans.labels_)
+  new_y =[]
+  for i in range(len(kmeans.labels_)):
+    if(kmeans.labels_[i] == 0):
+      new_y.append("Tidak Layak")
+    else:
+      new_y.append("Layak")
+  # Import necessary modules
 
-# @app.route('/predict',methods=['POST'])
-# def predict():
-#     if 'audio' not in request.files:
-#         return 'No file provided', 400
 
-#     audio_file = request.files['audio']
-#     if not audio_file.filename.lower().endswith('.wav'):
-#         return 'Invalid file type, must be .wav', 400
-#     preditction = func(audio_file)
-#     print(preditction)
-#     return preditction
 
-# nama="B"
-# usia='30'
-# penghasilan=500000
-# asset_motor=0
-# asset_mobil=0
-# asset_rumah=1
-# harga_rumah=300000000
-# harga_sewa=0
-# jumlah_anak=0
-# tanggungan_lain=0
-# hasil="Tidak Layak Menerima"
+  # Create feature and target arrays
+  y = kmeans.labels_
 
-# data = {
-# 'nama': nama,
-# 'usia': usia,
-# 'penghasilan': penghasilan,
-# 'asset_motor': asset_motor,
-# 'asset_mobil': asset_mobil,
-# 'asset_rumah': asset_rumah,
-# 'harga_rumah': harga_rumah,
-# 'harga_sewa' : harga_sewa,
-# 'jumlah_anak': jumlah_anak,
-# 'tanggungan_lain': tanggungan_lain,
-# 'hasil': hasil 
-# }
+  # Split into training and test set
+  X_train, X_test, y_train, y_test = train_test_split(
+        X, new_y, test_size = 0.2, random_state=0)
 
-# doc_ref=db.collection('predictions').document()
-# doc_ref.set(data)
+  # neighbors = np.arange(1, 9)
+  # train_accuracy = np.empty(len(neighbors))
+  # test_accuracy = np.empty(len(neighbors))
+
+  # Loop over K values
+  # for i, k in enumerate(neighbors):
+  #   knn = KNeighborsClassifier(n_neighbors=k)
+  #   knn.fit(X_train, y_train)
+  #   predictions=knn.predict(X_test)
+  #   print(classification_report(y_test, predictions,digits=4))
+  #   print(confusion_matrix(y_test,predictions))
+
+
+  #kalo udah ada data
+
+  knn = KNeighborsClassifier(n_neighbors=3)
+  knn.fit(X_train, y_train)
+  predictions=knn.predict(X_data.reshape(1,8))
+  print(predictions)
+  update_existing_document(input,predictions[0])
+  return predictions[0]
+
+@app.route("/delete", methods=['POST','GET'])
+def delete():
+  input = str(request.args['query'])
+  print(input)
+  delete_document("predictions",input)
+  return "Success"
+  
+  
 
 if __name__ == '__main__':
     # serve(app, host="localhost", port=55895)
