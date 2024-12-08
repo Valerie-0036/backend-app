@@ -2,7 +2,6 @@ Flask==2.2.3
 gunicorn==20.1.0
 Werkzeug==2.2.2
 h5py==3.8.0
-ipython
 librosa
 matplotlib
 numpy
@@ -17,3 +16,4 @@ requests
 python-firebase
 firebase_admin
 flask_cors
+statistics
