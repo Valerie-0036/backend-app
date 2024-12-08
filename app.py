@@ -2,13 +2,9 @@ from flask import Flask, request
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans
 from waitress import serve
-from sklearn.neighbors import KNeighborsClassifier
 import os
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
-from sklearn.metrics import classification_report, confusion_matrix
 # import tensorflow as tf
 # import librosa
 from google.cloud.firestore_v1.base_query import FieldFilter,Or
@@ -17,6 +13,16 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from flask_cors import CORS
+
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.neighbors import KNeighborsClassifier
+from statistics import mode
 
 cred = credentials.Certificate(r"bansos-2016-firebase-adminsdk-max5r-f294586e65.json")
 firebase_admin.initialize_app(cred)
@@ -40,7 +46,6 @@ def update_existing_document(docID,change):
 
 
     # Update the document
-
     doc_ref.update({
 
         "hasil": change,
@@ -209,55 +214,46 @@ def home():
   print(input)
   
   answer = get_document("predictions",input)
-  X_data=np.array([answer["penghasilan"],answer["asset_motor"],answer["asset_mobil"],answer["asset_rumah"],answer["harga_rumah"],answer["harga_sewa"],answer["jumlah_anak"],answer["tanggungan_lain"]])
+  datainput=np.array([answer["penghasilan"],answer["asset_motor"],answer["asset_mobil"],answer["asset_rumah"],answer["harga_rumah"],answer["harga_sewa"],answer["jumlah_anak"],answer["tanggungan_lain"]]).reshape(1,8)
   
-  datasets = pd.read_csv('data_warga_baruuuuu.csv', sep = ';')
-  datasets.keys()
-  X = np.asarray(datasets)
-  print(X)
-  kmeans = KMeans(n_clusters = 2,random_state=0)
-  kmeans.fit(X)
-  print(kmeans.cluster_centers_)
-  #clustered
-  print(kmeans.labels_)
-  new_y =[]
-  for i in range(len(kmeans.labels_)):
-    if(kmeans.labels_[i] == 0):
-      new_y.append("Tidak Layak")
-    else:
-      new_y.append("Layak")
-  # Import necessary modules
+  xls = pd.read_excel("Data_KFold.xlsx", sheet_name=['Utama','Layak', 'TidakLayak', 'Latih1','Uji1','Latih2','Uji2','Latih3','Uji3'])
+  latih1 = xls['Latih1'].to_numpy()
+  uji1 = xls['Uji1'].to_numpy()
+  latih2 = xls['Latih2'].to_numpy()
+  uji2 = xls['Uji2'].to_numpy()
+  latih3 = xls['Latih3'].to_numpy()
+  uji3 = xls['Uji3'].to_numpy()
+  
+  knn1 = KNeighborsClassifier(n_neighbors=3)
+  knn1.fit(latih1[:, 0:8], latih1[:, 8:9])
+  predictions1 = knn1.predict(uji1[:, 0:8])
+  print(classification_report(uji1[:, 8:9], predictions1))
+  
+  knn2 = KNeighborsClassifier(n_neighbors=3)
+  knn2.fit(latih2[:, 0:8], latih2[:, 8:9])
+  predictions2 = knn2.predict(uji2[:, 0:8])
+  print(classification_report(uji2[:, 8:9], predictions2))
+  
+  knn3 = KNeighborsClassifier(n_neighbors=3)
+  knn3.fit(latih3[:, 0:8], latih3[:, 8:9])
+  predictions3 = knn3.predict(uji3[:, 0:8])
+  print(classification_report(uji3[:, 8:9], predictions3))
+  
+  score1 = accuracy_score(uji1[:, 8:9], predictions1)
+  score2 = accuracy_score(uji2[:, 8:9], predictions2)
+  score3 = accuracy_score(uji3[:, 8:9], predictions3)
+  print(score1, score2, score3)
+  mean = (score1 + score2 + score3)/3
+  print(mean)
+  
+  predictions1 = knn1.predict(datainput)
+  predictions2 = knn2.predict(datainput)
+  predictions3 = knn3.predict(datainput)
+  hasil = [predictions1[0], predictions2[0], predictions3[0]]
 
-
-
-  # Create feature and target arrays
-  y = kmeans.labels_
-
-  # Split into training and test set
-  X_train, X_test, y_train, y_test = train_test_split(
-        X, new_y, test_size = 0.2, random_state=0)
-
-  # neighbors = np.arange(1, 9)
-  # train_accuracy = np.empty(len(neighbors))
-  # test_accuracy = np.empty(len(neighbors))
-
-  # Loop over K values
-  # for i, k in enumerate(neighbors):
-  #   knn = KNeighborsClassifier(n_neighbors=k)
-  #   knn.fit(X_train, y_train)
-  #   predictions=knn.predict(X_test)
-  #   print(classification_report(y_test, predictions,digits=4))
-  #   print(confusion_matrix(y_test,predictions))
-
-
-  #kalo udah ada data
-
-  knn = KNeighborsClassifier(n_neighbors=3)
-  knn.fit(X_train, y_train)
-  predictions=knn.predict(X_data.reshape(1,8))
-  print(predictions)
-  update_existing_document(input,predictions[0])
-  return predictions[0]
+  prediction=mode(hasil)
+  update_existing_document(input,prediction)
+  return prediction
 
 @app.route("/delete", methods=['POST','GET'])
 def delete():
