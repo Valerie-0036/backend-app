@@ -1,12 +1,8 @@
 from flask import Flask, request
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from waitress import serve
 import os
-import matplotlib.pyplot as plt
-# import tensorflow as tf
-# import librosa
 from google.cloud.firestore_v1.base_query import FieldFilter,Or
 import numpy as np
 import firebase_admin
@@ -24,7 +20,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
 from statistics import mode
 
-cred = credentials.Certificate(r"bansos-2016-firebase-adminsdk-max5r-f294586e65.json")
+cred = credentials.Certificate(r"bansos-2016-firebase-adminsdk-max5r-17c3377da3.json")
 firebase_admin.initialize_app(cred)
 db=firestore.client()
 app = Flask(__name__)
